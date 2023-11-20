@@ -3,7 +3,7 @@
 #include <Adafruit_BMP085.h>
 
 
-Adafruit_BMP085 bmp;;
+Adafruit_BMP085 bmp;
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite sprite = TFT_eSprite(&tft);
 TFT_eSprite spr = TFT_eSprite(&tft); //sprite for seconds
