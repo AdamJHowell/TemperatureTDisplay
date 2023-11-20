@@ -1,3 +1,3 @@
 # TemperatureTDisplay
 
-## Use a BMP 085 to display temperature and presure on a Lilygo T-Display.
+## Use a BMP 085 to display temperature and pressure on a Lilygo T-Display.
