@@ -1,3 +1,12 @@
+/*
+ * This is a fork of Volos' excellent repo for the T-Display S3 and BMP080 sensor.
+ * https://github.com/VolosR/TemperatureTDisplay
+ * I have modified it to use the SHT40 sensor.
+ * To read from that sensor, I am using the Adafruit SHT4x library: https://github.com/adafruit/Adafruit_SHT4X
+ * I added logging meant to be used with the Arduino serial plotter.
+ * This logging occurs in every iteration of loop(), so it will clutter the serial output.
+ * Because of that clutter, I have that logging controlled with a pre-processor #ifdef.
+ */
 #include "TFT_eSPI.h"
 #include "image.h"
 #include "Adafruit_SHT4x.h"
@@ -27,7 +36,7 @@ unsigned short imageS[54400] = { 0 };
 void setup() 
 {
   Serial.begin( 115200 );
-  Serial.println( F( "BME280 Sensor event test" ) );
+  Serial.println( F( "SHT40 sensor event test" ) );
   tft.init();
   tft.setRotation( 1 );
   tft.setSwapBytes( true );
@@ -108,12 +117,17 @@ void loop()
   sht4.getEvent( &humidity, &temp );// populate temp and humidity objects with fresh data
   timestamp = millis() - timestamp;
 
+  float tempF = temp.temperature * 1.8 + 32;
+  float relativeHumidity = humidity.relative_humidity;
+
+#ifdef PLOTTER
   Serial.print( "tempF:" ); 
-  Serial.print( temp.temperature * 1.8 + 32 ); 
+  Serial.print( tempF ); 
   Serial.print( " Humidity:" ); 
-  Serial.print( humidity.relative_humidity ); 
+  Serial.print( relativeHumidity ); 
   Serial.print( " readDurationMs:" );
   Serial.println( timestamp );
+#endif // PLOTTER
 
   spr2.fillSprite( TFT_BLACK );
   spr2.setFreeFont( &Orbitron_Light_24 );
@@ -152,15 +166,14 @@ void loop()
   spr2.drawCircle( 76, 36, 3, TFT_WHITE );
   spr2.setTextColor( TFT_WHITE, TFT_BLACK );
 
-  String temperature = String( temp.temperature );
+  String temperature = String( tempF );
   spr2.drawString( temperature.substring( 0, 4 ), 36, 40 );
   spr2.setTextFont( 0 );
-  spr2.drawString( "Celsius", 26, 62 );
+  spr2.drawString( "Fahrenheit", 26, 62 );
 
-  float humidity2 = humidity.relative_humidity;
   spr2.drawString( "Humidity  ", 40, 80, 2 );
 
-  spr2.drawString( String( humidity2 ) + " % rH", 44, 104, 2 );
+  spr2.drawString( String( relativeHumidity ) + " % rH", 44, 104, 2 );
   spr2.pushToSprite( &sprite, xt, yt, TFT_BLACK );
   sprite.pushSprite( 0, 0 );
 }
