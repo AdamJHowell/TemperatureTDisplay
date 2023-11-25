@@ -1,3 +1,3 @@
-# TemperatureTDisplay
+# VolosTemperatureTDisplay
 
-## Use a BMP 085 to display temperature and pressure on a Lilygo T-Display.
+## Use a SHT40 to display temperature and pressure on a Lilygo T-Display.

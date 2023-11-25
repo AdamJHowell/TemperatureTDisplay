@@ -2,21 +2,27 @@
  * This is a fork of Volos' excellent repo for the T-Display S3 and BMP080 sensor.
  * https://github.com/VolosR/TemperatureTDisplay
  * I have modified it to use the SHT40 sensor.
+ * The T-Display-S3 can be found here: https://www.lilygo.cc/products/t-display-s3
+ * Resolution: 170x320 full-color TFT on an 8-Bit Parallel Interface driven by a ST7789V chip.
  * To read from that sensor, I am using the Adafruit SHT4x library: https://github.com/adafruit/Adafruit_SHT4X
  * I added logging meant to be used with the Arduino serial plotter.
  * This logging occurs in every iteration of loop(), so it will clutter the serial output.
  * Because of that clutter, I have that logging controlled with a pre-processor #ifdef.
  */
 #include "TFT_eSPI.h"
-#include "image.h"
+#include "image2.h"
 #include "Adafruit_SHT4x.h"
+#include "FloatArrayManager.h"
 
+#define PLOTTER
 
 Adafruit_SHT4x sht4 = Adafruit_SHT4x();
 TFT_eSPI tft = TFT_eSPI();
-TFT_eSprite sprite = TFT_eSprite(&tft);
-TFT_eSprite spr = TFT_eSprite(&tft);   //sprite for seconds
-TFT_eSprite spr2 = TFT_eSprite(&tft);  //sprite for calendar
+TFT_eSprite sprite = TFT_eSprite( &tft );
+TFT_eSprite spr = TFT_eSprite( &tft );   //sprite for seconds
+TFT_eSprite spr2 = TFT_eSprite( &tft );  //sprite for calendar
+FloatArrayManager tempArray( 5 );
+FloatArrayManager humidityArray( 5 );
 
 
 const int iW = 480;
@@ -36,7 +42,7 @@ unsigned short imageS[54400] = { 0 };
 void setup() 
 {
   Serial.begin( 115200 );
-  Serial.println( F( "SHT40 sensor event test" ) );
+  Serial.println( F( "T-Display S3 with SHT40" ) );
   tft.init();
   tft.setRotation( 1 );
   tft.setSwapBytes( true );
@@ -55,60 +61,60 @@ void setup()
 
   Wire.begin( 43, 44 );
 
-  Serial.println("Adafruit SHT4x test");
-  if (! sht4.begin()) 
+  if( !sht4.begin() )
   {
-    Serial.println("Couldn't find SHT4x");
-    while (1) delay(1);
+    Serial.println( "Couldn't find SHT4x" );
+    while( 1 )
+      delay( 1 );
   }
-  Serial.println("Found SHT4x sensor");
-  Serial.print("Serial number 0x");
-  Serial.println(sht4.readSerial(), HEX);
+  Serial.println( "Found SHT4x sensor" );
+  Serial.print( "Serial number 0x" );
+  Serial.println( sht4.readSerial(), HEX );
 
   // You can have 3 different precisions, higher precision takes longer
-  sht4.setPrecision(SHT4X_HIGH_PRECISION);
-  switch (sht4.getPrecision()) 
+  sht4.setPrecision( SHT4X_HIGH_PRECISION );
+  switch( sht4.getPrecision() )
   {
      case SHT4X_HIGH_PRECISION: 
-       Serial.println("High precision");
+       Serial.println( "High precision" );
        break;
      case SHT4X_MED_PRECISION: 
-       Serial.println("Med precision");
+       Serial.println( "Med precision" );
        break;
      case SHT4X_LOW_PRECISION: 
-       Serial.println("Low precision");
+       Serial.println( "Low precision" );
        break;
   }
 
   // You can have 6 different heater settings higher heat and longer times uses more power and reads will take longer too!
-  sht4.setHeater(SHT4X_NO_HEATER);
-  switch (sht4.getHeater()) {
+  sht4.setHeater( SHT4X_NO_HEATER );
+  switch( sht4.getHeater() )
+  {
      case SHT4X_NO_HEATER: 
-       Serial.println("No heater");
+       Serial.println( "No heater" );
        break;
      case SHT4X_HIGH_HEATER_1S: 
-       Serial.println("High heat for 1 second");
+       Serial.println( "High heat for 1 second" );
        break;
      case SHT4X_HIGH_HEATER_100MS: 
-       Serial.println("High heat for 0.1 second");
+       Serial.println( "High heat for 0.1 second" );
        break;
      case SHT4X_MED_HEATER_1S: 
-       Serial.println("Medium heat for 1 second");
+       Serial.println( "Medium heat for 1 second" );
        break;
      case SHT4X_MED_HEATER_100MS: 
-       Serial.println("Medium heat for 0.1 second");
+       Serial.println( "Medium heat for 0.1 second" );
        break;
      case SHT4X_LOW_HEATER_1S: 
-       Serial.println("Low heat for 1 second");
+       Serial.println( "Low heat for 1 second" );
        break;
      case SHT4X_LOW_HEATER_100MS: 
-       Serial.println("Low heat for 0.1 second");
+       Serial.println( "Low heat for 0.1 second" );
        break;
   }
 }
 
-
-void loop() 
+void pollSensor()
 {
   sensors_event_t humidity;
   sensors_event_t temp;
@@ -120,14 +126,18 @@ void loop()
   float tempF = temp.temperature * 1.8 + 32;
   float relativeHumidity = humidity.relative_humidity;
 
+  tempArray.insertValue( tempF );
+  humidityArray.insertValue( relativeHumidity );
+
 #ifdef PLOTTER
-  Serial.print( "tempF:" ); 
-  Serial.print( tempF ); 
-  Serial.print( " Humidity:" ); 
-  Serial.print( relativeHumidity ); 
-  Serial.print( " readDurationMs:" );
-  Serial.println( timestamp );
+  Serial.printf( "tempF:%.1f Humidity:%.1f readDurationMs:%d\n", tempF, relativeHumidity, timestamp );
 #endif // PLOTTER
+}
+
+
+void loop() 
+{
+  pollSensor();
 
   spr2.fillSprite( TFT_BLACK );
   spr2.setFreeFont( &Orbitron_Light_24 );
@@ -166,14 +176,16 @@ void loop()
   spr2.drawCircle( 76, 36, 3, TFT_WHITE );
   spr2.setTextColor( TFT_WHITE, TFT_BLACK );
 
-  String temperature = String( tempF );
+  String temperature = String( tempArray.getAverage() );
   spr2.drawString( temperature.substring( 0, 4 ), 36, 40 );
   spr2.setTextFont( 0 );
   spr2.drawString( "Fahrenheit", 26, 62 );
 
-  spr2.drawString( "Humidity  ", 40, 80, 2 );
+  spr2.drawString( "Humidity", 40, 80, 2 );
 
-  spr2.drawString( String( relativeHumidity ) + " % rH", 44, 104, 2 );
+  String humidityString = String( humidityArray.getAverage(), 1 );
+  // snprintf( humidityBuffer.c_str(), 10, "%.1f", humidityArray.getAverage() );
+  spr2.drawString( humidityString + " % rH", 44, 104, 2 );
   spr2.pushToSprite( &sprite, xt, yt, TFT_BLACK );
   sprite.pushSprite( 0, 0 );
 }
