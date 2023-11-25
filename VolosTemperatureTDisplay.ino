@@ -1,22 +1,26 @@
 /*
  * This is a fork of Volos' excellent repo for the T-Display S3 and BMP080 sensor.
  * https://github.com/VolosR/TemperatureTDisplay
- * I have modified it to use the SHT40 sensor.
+ * I have modified it to use the Adafruit SHT40 sensor.
+ * I have also added the Adafruit ADS9960 light sensor: http://www.adafruit.com/products/3595
  * The T-Display-S3 can be found here: https://www.lilygo.cc/products/t-display-s3
+ *
  * Resolution: 170x320 full-color TFT on an 8-Bit Parallel Interface driven by a ST7789V chip.
  * To read from that sensor, I am using the Adafruit SHT4x library: https://github.com/adafruit/Adafruit_SHT4X
  * I added logging meant to be used with the Arduino serial plotter.
  * This logging occurs in every iteration of loop(), so it will clutter the serial output.
  * Because of that clutter, I have that logging controlled with a pre-processor #ifdef.
  */
-#include "TFT_eSPI.h"
 #include "image2.h"
-#include "Adafruit_SHT4x.h"
+#include "TFT_eSPI.h"           // https://github.com/Bodmer/TFT_eSPI
+#include "Adafruit_SHT4x.h"     // https://github.com/adafruit/Adafruit_SHT4X
+#include "Adafruit_APDS9960.h"  // https://github.com/adafruit/Adafruit_APDS9960
 #include "FloatArrayManager.h"
 
 #define PLOTTER
 
 Adafruit_SHT4x sht4 = Adafruit_SHT4x();
+Adafruit_APDS9960 apds;
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite sprite = TFT_eSprite( &tft );
 TFT_eSprite spr = TFT_eSprite( &tft );   //sprite for seconds
