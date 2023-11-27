@@ -15,10 +15,8 @@ include_directories( .
 
 add_executable( T-Display-S3_SHT40
     VolosTemperatureTDisplay.ino
-    FloatArrayManager.cpp
     image.h
     image2.h
-    FloatArrayManager.h
 )
 
 set_target_properties( T-Display-S3_SHT40 PROPERTIES LINKER_LANGUAGE CXX )

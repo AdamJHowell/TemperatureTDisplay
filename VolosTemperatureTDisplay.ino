@@ -15,7 +15,7 @@
 #include "TFT_eSPI.h"           // https://github.com/Bodmer/TFT_eSPI
 #include "Adafruit_SHT4x.h"     // https://github.com/adafruit/Adafruit_SHT4X
 #include "Adafruit_APDS9960.h"  // https://github.com/adafruit/Adafruit_APDS9960
-#include "FloatArrayManager.h"
+#include "ArrayManager.h"
 
 #define PLOTTER
 
